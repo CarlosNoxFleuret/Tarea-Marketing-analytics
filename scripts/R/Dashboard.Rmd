@@ -1,0 +1,234 @@
+---
+title: "Untitled"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+---
+title: "Dashboard Análisis SaaS"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    theme: united
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(plotly)
+library(corrplot)
+library(gridExtra)
+library(scales)
+library(lubridate)
+
+# Cargar datos
+datos <- read.csv("enhanced_saas_marketing_data.csv") %>%
+  mutate(date = as.Date(date))
+```
+
+Métricas Principales
+===================================== 
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Tendencia de Ingresos por Empresa
+
+```{r}
+datos %>%
+  group_by(date, company) %>%
+  summarise(valor = mean(revenue)) %>%
+  ggplot(aes(x = date, y = valor, color = company)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  theme_minimal() +
+  labs(
+    title = "Tendencia de Ingresos",
+    x = "Fecha",
+    y = "Revenue"
+  ) +
+  theme(legend.position = "bottom")
+```
+
+### Evolución del CAC
+
+```{r}
+datos %>%
+  group_by(date, company) %>%
+  summarise(valor = mean(customer_acquisition_cost)) %>%
+  ggplot(aes(x = date, y = valor, color = company)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  theme_minimal() +
+  labs(
+    title = "Evolución del CAC",
+    x = "Fecha",
+    y = "CAC"
+  ) +
+  theme(legend.position = "bottom")
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Métricas de Engagement
+
+```{r}
+datos %>%
+  group_by(company) %>%
+  summarise(
+    avg_session = mean(avg_session_duration),
+    pages_session = mean(pages_per_session),
+    email_engagement = mean(email_engagement_rate)
+  ) %>%
+  gather(metric, value, -company) %>%
+  ggplot(aes(x = company, y = value, fill = metric)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  theme_minimal() +
+  labs(title = "Métricas de Engagement") +
+  theme(axis.text.x = element_text(angle = 45))
+```
+
+### KPIs Principales
+
+```{r}
+valueBox(
+  value = sprintf("%.1f%%", mean(datos$conversion_rate) * 100),
+  caption = "Tasa de Conversión Promedio",
+  icon = "fa-percentage",
+  color = "primary"
+)
+
+valueBox(
+  value = sprintf("$%.0f", mean(datos$customer_lifetime_value)),
+  caption = "CLV Promedio",
+  icon = "fa-dollar-sign",
+  color = "success"
+)
+
+valueBox(
+  value = sprintf("%.1f%%", mean(datos$churn_rate) * 100),
+  caption = "Tasa de Churn Promedio",
+  icon = "fa-user-minus",
+  color = "warning"
+)
+```
+
+Análisis de Tráfico
+===================================== 
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Fuentes de Tráfico por Empresa
+
+```{r}
+datos %>%
+  group_by(company) %>%
+  summarise(
+    organic = mean(organic_traffic),
+    direct = mean(direct_traffic),
+    referral = mean(referral_traffic),
+    paid = mean(paid_traffic)
+  ) %>%
+  gather(traffic_source, visits, -company) %>%
+  ggplot(aes(x = company, y = visits, fill = traffic_source)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  theme_minimal() +
+  labs(title = "Fuentes de Tráfico") +
+  theme(axis.text.x = element_text(angle = 45))
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Métricas de Conversión
+
+```{r}
+datos %>%
+  group_by(company) %>%
+  summarise(
+    conversion = mean(conversion_rate),
+    bounce = mean(bounce_rate)
+  ) %>%
+  gather(metric, rate, -company) %>%
+  ggplot(aes(x = company, y = rate, fill = metric)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  theme_minimal() +
+  labs(title = "Tasas de Conversión y Rebote") +
+  theme(axis.text.x = element_text(angle = 45))
+```
+
+Análisis Regional
+===================================== 
+
+### Métricas por Región y Categoría de Producto
+
+```{r}
+datos %>%
+  group_by(region, product_category) %>%
+  summarise(
+    avg_revenue = mean(revenue),
+    conversion_rate = mean(conversion_rate),
+    customer_satisfaction = mean(customer_satisfaction),
+    feature_adoption = mean(feature_adoption_rate),
+    churn = mean(churn_rate)
+  ) %>%
+  gather(metric, value, -region, -product_category) %>%
+  ggplot(aes(x = region, y = value, fill = product_category)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~metric, scales = "free_y") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45)) +
+  labs(title = "Análisis Regional")
+```
+
+Análisis de Marketing
+===================================== 
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### ROI de Marketing
+
+```{r}
+datos %>%
+  group_by(company, month = floor_date(date, "month")) %>%
+  summarise(
+    marketing_roi = mean(marketing_roi),
+    marketing_spend = mean(marketing_spend)
+  ) %>%
+  ggplot(aes(x = marketing_spend, y = marketing_roi, color = company)) +
+  geom_point(size = 3, alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal() +
+  labs(
+    title = "ROI vs Inversión en Marketing",
+    x = "Inversión en Marketing",
+    y = "ROI"
+  )
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Eficiencia de Marketing
+
+```{r}
+datos %>%
+  group_by(company) %>%
+  summarise(
+    roi = mean(marketing_roi),
+    cac = mean(customer_acquisition_cost),
+    clv = mean(customer_lifetime_value)
+  ) %>%
+  gather(metric, value, -company) %>%
+  ggplot(aes(x = company, y = value, fill = metric)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  theme_minimal() +
+  labs(title = "Métricas de Eficiencia de Marketing") +
+  theme(axis.text.x = element_text(angle = 45))
+```
