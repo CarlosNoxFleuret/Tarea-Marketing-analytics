@@ -32,33 +32,31 @@ proyecto_saas_analytics/
 
 ### Scripts
 #### Python
-- **data_preparation.py**: Implementa:
+- **Control 5.ipynb**: Implementa:
   - Limpieza de datos
   - Manejo de valores faltantes
   - Creación de métricas derivadas (gross margin, marketing efficiency, CLV/CAC ratio)
   - Agregación de métricas temporales
-  
-- **analysis.py**: Realiza:
   - Análisis exploratorio de datos
   - Visualizaciones básicas
   - Cálculo de correlaciones
   - Análisis estadístico inicial
 
 #### R
-- **statistical_analysis.R**: Ejecuta:
+- **R c5.Rmd**: Ejecuta:
   - Análisis estadístico detallado
   - Tests de normalidad
   - Análisis de correlaciones
   - Cálculos de métricas clave
   
-- **visualizations.R**: Genera:
+- **Dashboard.Rmd**: Genera:
   - Gráficos de tendencias temporales
   - Análisis de distribuciones
   - Matrices de correlación
   - Visualizaciones avanzadas
 
 ### Tableau
-- **workbook.twb**: Contiene el análisis visual principal con:
+- **Tableau dashboar libro.twb**: Contiene el análisis visual principal con:
   - Campos calculados básicos
   - Métricas financieras y de usuario
   - Visualizaciones interactivas
